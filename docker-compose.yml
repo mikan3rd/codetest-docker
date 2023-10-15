@@ -15,5 +15,13 @@ services:
   app:
     build:
       context: app
+    environment:
+      PORT: 8888
+      DATABASE_URL: mysql://root@db:3306/codetest
     ports:
       - 8888:8888
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
+      - /app/node_modules
