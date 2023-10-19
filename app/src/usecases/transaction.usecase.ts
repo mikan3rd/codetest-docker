@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class TransactionService {
+export class TransactionUsecase {
   getHello(): string {
     return 'Hello World?';
   }

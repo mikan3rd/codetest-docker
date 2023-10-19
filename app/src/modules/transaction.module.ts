@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TransactionService } from '../services/transaction.service';
+import { TransactionService } from '../usecases/transaction.usecase';
 import { TransactionController } from '../controllers/transaction.controller';
 
 @Module({

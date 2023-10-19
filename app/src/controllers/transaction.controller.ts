@@ -1,12 +1,12 @@
 import { Controller, Post } from '@nestjs/common';
-import { TransactionService } from '../services/transaction.service';
+import { TransactionUsecase } from '../usecases/transaction.usecase';
 
 @Controller('transactions')
 export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(private readonly transactionUsecase: TransactionUsecase) {}
 
   @Post()
   create(): string {
-    return this.transactionService.getHello();
+    return this.transactionUsecase.getHello();
   }
 }
