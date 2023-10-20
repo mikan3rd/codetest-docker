@@ -1,12 +1,13 @@
-import { Controller, Post } from '@nestjs/common';
-import { AppService } from '../services/app.service';
+import { Controller, Post, Body } from '@nestjs/common';
+import { TransactionUsecase } from '../usecases/transaction.usecase';
+import { TransactionInput } from 'src/dto/input/transaction.input';
 
 @Controller('transactions')
 export class TransactionController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly transactionUsecase: TransactionUsecase) {}
 
   @Post()
-  create(): string {
-    return this.appService.getHello();
+  create(@Body() transactionInput: TransactionInput): string {
+    return this.transactionUsecase.create(transactionInput);
   }
 }
