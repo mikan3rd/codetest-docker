@@ -14,12 +14,14 @@ export class TransactionRepository {
     data: Omit<Prisma.transactionsCreateInput, 'users'>,
   ) {
     return await this.prisma.$transaction(async (prisma) => {
-      const totalAmount = await prisma.transactions.aggregate({
-        where: { user_id: userId },
-        _sum: { amount: true },
-      });
+      const [result] = await prisma.$queryRaw<{ totalAmount: string }[]>`
+        SELECT SUM(amount) as totalAmount
+        FROM transactions
+        WHERE user_id = ${userId}
+        FOR UPDATE;
+      `;
 
-      if (totalAmount._sum.amount + data.amount > MAX_AMOUNT) {
+      if (Number(result.totalAmount) + data.amount > MAX_AMOUNT) {
         throw new TransactionAmountExceeded();
       }
 
