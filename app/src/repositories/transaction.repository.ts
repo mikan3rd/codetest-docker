@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../interfaces/services/prisma.service';
 import { Prisma } from '@prisma/client';
+import { TransactionAmountExceeded } from '../interfaces/exceptions/transaction.exception';
+
+const MAX_AMOUNT = 1000;
 
 @Injectable()
 export class TransactionRepository {
@@ -16,9 +19,8 @@ export class TransactionRepository {
         _sum: { amount: true },
       });
 
-      if (totalAmount._sum.amount + data.amount > 1000) {
-        // TODO: throw error
-        return;
+      if (totalAmount._sum.amount + data.amount > MAX_AMOUNT) {
+        throw new TransactionAmountExceeded();
       }
 
       return prisma.transactions.create({
