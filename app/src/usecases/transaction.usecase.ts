@@ -11,13 +11,10 @@ export class TransactionUsecase {
   ) {}
 
   async create(transactionInput: TransactionInput) {
-    const { user_id, amount, description } = transactionInput;
+    const { user_id, ...data } = transactionInput;
 
     const transaction = await this.transactionRepository
-      .create(user_id, {
-        amount,
-        description,
-      })
+      .create(user_id, data)
       .catch((error) => {
         if (error instanceof TransactionAmountExceeded) {
           throw new HttpException(
@@ -27,7 +24,7 @@ export class TransactionUsecase {
         }
 
         throw new HttpException(
-          'Internal server error',
+          'Create transaction failed',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
