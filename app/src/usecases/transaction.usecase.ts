@@ -2,7 +2,9 @@ import { Injectable, Inject, HttpException, HttpStatus } from '@nestjs/common';
 import { TransactionInput } from '../dto/input/transaction.input';
 import { TransactionRepository } from '../repositories/transaction.repository';
 import { TransactionAmountExceeded } from '../interfaces/exceptions/transaction.exception';
-import { users } from '@prisma/client';
+import { users, transactions, Prisma } from '@prisma/client';
+
+const MAX_RETRIES = 10;
 
 @Injectable()
 export class TransactionUsecase {
@@ -21,22 +23,49 @@ export class TransactionUsecase {
       throw new HttpException('user_id is invalid', HttpStatus.BAD_REQUEST);
     }
 
-    const transaction = await this.transactionRepository
-      .create(user_id, data)
-      .catch((error) => {
-        if (error instanceof TransactionAmountExceeded) {
-          throw new HttpException(
-            TransactionAmountExceeded.name,
-            HttpStatus.PAYMENT_REQUIRED,
-          );
-        }
-
-        console.error(error);
-        throw new HttpException(
-          'Create transaction failed',
-          HttpStatus.INTERNAL_SERVER_ERROR,
+    let transaction: transactions;
+    const RetryCounts = Array.from({ length: MAX_RETRIES }, (_, i) => i + 1);
+    for (const retryCount of RetryCounts) {
+      if (retryCount > 0) {
+        console.warn(
+          `user_id: ${user_id}, Retrying... (${retryCount}/${MAX_RETRIES})`,
         );
-      });
+      }
+
+      transaction = await this.transactionRepository
+        .create(user_id, data)
+        .catch((error) => {
+          if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            // Unique constraint failed
+            if (error.code === 'P2002') {
+              if (retryCount < MAX_RETRIES) {
+                return null;
+              }
+              throw new HttpException(
+                'Duplicate transaction',
+                HttpStatus.CONFLICT,
+              );
+            }
+          }
+
+          if (error instanceof TransactionAmountExceeded) {
+            throw new HttpException(
+              TransactionAmountExceeded.name,
+              HttpStatus.PAYMENT_REQUIRED,
+            );
+          }
+
+          console.error(error);
+          throw new HttpException(
+            'Create transaction failed',
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        });
+
+      if (transaction) {
+        break;
+      }
+    }
 
     return transaction;
   }
