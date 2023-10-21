@@ -9,7 +9,7 @@ const MAX_AMOUNT = 1000;
 export class TransactionRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(
+  async createWithLock(
     userId: number,
     data: Omit<Prisma.transactionsCreateInput, 'users'>,
   ) {

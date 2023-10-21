@@ -22,7 +22,7 @@ export class TransactionUsecase {
     }
 
     const transaction = await this.transactionRepository
-      .create(user_id, data)
+      .createWithLock(user_id, data)
       .catch((error) => {
         if (error instanceof TransactionAmountExceeded) {
           throw new HttpException(
