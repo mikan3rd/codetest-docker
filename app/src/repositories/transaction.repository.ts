@@ -9,28 +9,61 @@ const MAX_AMOUNT = 1000;
 export class TransactionRepository {
   constructor(private prisma: PrismaService) {}
 
-  async createWithLock(
+  // Optimistic Concurrency Control
+  async create(
     userId: number,
-    data: Omit<Prisma.transactionsCreateInput, 'users'>,
+    data: Pick<Prisma.transactionsCreateInput, 'amount' | 'description'>,
   ) {
     return await this.prisma.$transaction(async (prisma) => {
-      const [result] = await prisma.$queryRaw<{ totalAmount: string }[]>`
-        SELECT SUM(amount) as totalAmount
-        FROM transactions
-        WHERE user_id = ${userId}
-        FOR UPDATE;
-      `;
+      const result = await prisma.transactions.aggregate({
+        where: { user_id: userId },
+        _sum: { amount: true },
+      });
 
-      if (Number(result.totalAmount) + data.amount > MAX_AMOUNT) {
+      if (result._sum.amount + data.amount > MAX_AMOUNT) {
         throw new TransactionAmountExceeded();
       }
 
-      return prisma.transactions.create({
+      const latestTransaction = await prisma.transactions.findFirst({
+        where: { user_id: userId },
+        orderBy: { version: 'desc' },
+      });
+
+      const latestVersion = latestTransaction?.version ?? 0;
+
+      return await prisma.transactions.create({
         data: {
           users: { connect: { id: userId } },
+          version: latestVersion + 1,
           ...data,
         },
       });
     });
   }
+
+  // Locking
+  // async create(
+  //   userId: number,
+  //   data: Pick<Prisma.transactionsCreateInput, 'amount' | 'description'>,
+  // ) {
+  //   return await this.prisma.$transaction(async (prisma) => {
+  //     const [result] = await prisma.$queryRaw<{ totalAmount: string }[]>`
+  //       SELECT SUM(amount) as totalAmount
+  //       FROM transactions
+  //       WHERE user_id = ${userId}
+  //       FOR UPDATE;
+  //     `;
+
+  //     if (Number(result.totalAmount) + data.amount > MAX_AMOUNT) {
+  //       throw new TransactionAmountExceeded();
+  //     }
+
+  //     return prisma.transactions.create({
+  //       data: {
+  //         users: { connect: { id: userId } },
+  //         ...data,
+  //       },
+  //     });
+  //   });
+  // }
 }
