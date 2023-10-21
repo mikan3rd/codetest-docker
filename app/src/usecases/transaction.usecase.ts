@@ -2,6 +2,7 @@ import { Injectable, Inject, HttpException, HttpStatus } from '@nestjs/common';
 import { TransactionInput } from '../dto/input/transaction.input';
 import { TransactionRepository } from '../repositories/transaction.repository';
 import { TransactionAmountExceeded } from '../interfaces/exceptions/transaction.exception';
+import { users } from '@prisma/client';
 
 @Injectable()
 export class TransactionUsecase {
@@ -10,8 +11,15 @@ export class TransactionUsecase {
     private transactionRepository: TransactionRepository,
   ) {}
 
-  async create(transactionInput: TransactionInput) {
-    const { user_id, ...data } = transactionInput;
+  async create(args: { transactionInput: TransactionInput; user: users }) {
+    const {
+      transactionInput: { user_id, ...data },
+      user,
+    } = args;
+
+    if (user_id !== user.id) {
+      throw new HttpException('user_id is invalid', HttpStatus.BAD_REQUEST);
+    }
 
     const transaction = await this.transactionRepository
       .create(user_id, data)

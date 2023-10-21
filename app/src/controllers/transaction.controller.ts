@@ -5,10 +5,12 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { TransactionUsecase } from '../usecases/transaction.usecase';
 import { TransactionInput } from '../dto/input/transaction.input';
 import { AuthGuard } from '../interfaces/guards/auth.guards';
+import { users } from '@prisma/client';
 
 @Controller('transactions')
 export class TransactionController {
@@ -17,7 +19,11 @@ export class TransactionController {
   @UseGuards(AuthGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() transactionInput: TransactionInput) {
-    return this.transactionUsecase.create(transactionInput);
+  create(
+    @Request() req: { user: users },
+    @Body() transactionInput: TransactionInput,
+  ) {
+    const { user } = req;
+    return this.transactionUsecase.create({ transactionInput, user });
   }
 }
