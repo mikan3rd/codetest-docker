@@ -2,7 +2,7 @@ import { Injectable, Inject, HttpException, HttpStatus } from '@nestjs/common';
 import { TransactionInput } from '../dto/input/transaction.input';
 import { TransactionRepository } from '../repositories/transaction.repository';
 import { TransactionAmountExceeded } from '../interfaces/exceptions/transaction.exception';
-import { users, transactions, Prisma } from '@prisma/client';
+import { User, Transaction, Prisma } from '@prisma/client';
 
 const MAX_RETRIES = 10;
 
@@ -13,7 +13,7 @@ export class TransactionUsecase {
     private transactionRepository: TransactionRepository,
   ) {}
 
-  async create(args: { transactionInput: TransactionInput; user: users }) {
+  async create(args: { transactionInput: TransactionInput; user: User }) {
     const {
       transactionInput: { user_id, ...data },
       user,
@@ -23,7 +23,7 @@ export class TransactionUsecase {
       throw new HttpException('user_id is invalid', HttpStatus.BAD_REQUEST);
     }
 
-    let transaction: transactions;
+    let transaction: Transaction;
     const RetryCounts = Array.from({ length: MAX_RETRIES }, (_, i) => i + 1);
     for (const retryCount of RetryCounts) {
       if (retryCount > 0) {
