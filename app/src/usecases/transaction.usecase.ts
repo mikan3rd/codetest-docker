@@ -23,6 +23,7 @@ export class TransactionUsecase {
           );
         }
 
+        console.error(error);
         throw new HttpException(
           'Create transaction failed',
           HttpStatus.INTERNAL_SERVER_ERROR,
