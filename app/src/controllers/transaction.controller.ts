@@ -9,8 +9,7 @@ import {
 } from '@nestjs/common';
 import { TransactionUsecase } from '../usecases/transaction.usecase';
 import { TransactionInput } from '../dto/input/transaction.input';
-import { AuthGuard } from '../interfaces/guards/auth.guards';
-import { users } from '@prisma/client';
+import { AuthGuard, AuthGuardRequest } from '../interfaces/guards/auth.guards';
 
 @Controller('transactions')
 export class TransactionController {
@@ -20,7 +19,7 @@ export class TransactionController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
-    @Request() req: { user: users },
+    @Request() req: AuthGuardRequest,
     @Body() transactionInput: TransactionInput,
   ) {
     const { user } = req;
