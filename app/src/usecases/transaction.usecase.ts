@@ -36,8 +36,8 @@ export class TransactionUsecase {
         .create(user_id, data)
         .catch((error) => {
           if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            // Unique constraint failed
-            if (error.code === 'P2002') {
+            // Unique constraint failed or Transaction failed
+            if (error.code === 'P2002' || error.code === 'P2034') {
               if (retryCount < MAX_RETRIES) {
                 return null;
               }
