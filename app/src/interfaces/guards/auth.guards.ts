@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { UserUsecase } from '../../usecases/user.usecase';
-import { users } from '@prisma/client';
+import { User } from '@prisma/client';
 
 export interface AuthGuardRequest extends Request {
-  user: users;
+  user: User;
 }
 
 @Injectable()

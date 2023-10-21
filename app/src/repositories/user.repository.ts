@@ -6,7 +6,7 @@ export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
   async findByApiKey(apikey: string) {
-    return this.prisma.users.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         api_key: apikey,
       },

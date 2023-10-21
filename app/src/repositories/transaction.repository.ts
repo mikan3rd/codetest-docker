@@ -12,10 +12,10 @@ export class TransactionRepository {
   // Optimistic Concurrency Control
   async create(
     userId: number,
-    data: Pick<Prisma.transactionsCreateInput, 'amount' | 'description'>,
+    data: Pick<Prisma.TransactionCreateInput, 'amount' | 'description'>,
   ) {
     return await this.prisma.$transaction(async (prisma) => {
-      const result = await prisma.transactions.aggregate({
+      const result = await prisma.transaction.aggregate({
         where: { user_id: userId },
         _sum: { amount: true },
       });
@@ -24,16 +24,16 @@ export class TransactionRepository {
         throw new TransactionAmountExceeded();
       }
 
-      const latestTransaction = await prisma.transactions.findFirst({
+      const latestTransaction = await prisma.transaction.findFirst({
         where: { user_id: userId },
         orderBy: { version: 'desc' },
       });
 
       const latestVersion = latestTransaction?.version ?? 0;
 
-      return await prisma.transactions.create({
+      return await prisma.transaction.create({
         data: {
-          users: { connect: { id: userId } },
+          user: { connect: { id: userId } },
           version: latestVersion + 1,
           ...data,
         },
