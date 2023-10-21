@@ -18,7 +18,9 @@ create table if not exists transactions
   user_id     int unsigned not null,
   amount      int          not null,
   description varchar(256) not null,
-  CONSTRAINT fk_transactions_users FOREIGN KEY (user_id) REFERENCES users (id)
+  version     int unsigned not null,
+  CONSTRAINT fk_transactions_users FOREIGN KEY (user_id) REFERENCES users (id),
+  UNIQUE KEY idx_user_version (user_id, version)
 ) character set utf8mb4 collate utf8mb4_bin;
 
 insert into users (name, api_key)

@@ -12,9 +12,10 @@ model transactions {
   user_id     Int    @db.UnsignedInt
   amount      Int
   description String @db.VarChar(256)
+  version     Int    @db.UnsignedInt
   users       users  @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "fk_transactions_users")
 
-  @@index([user_id], map: "fk_transactions_users")
+  @@unique([user_id, version], map: "idx_user_version")
 }
 
 model users {
